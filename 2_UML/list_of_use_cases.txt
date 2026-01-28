@@ -1,0 +1,3 @@
+Submit Natural Language Command
+Authenticate User
+Parse Intent & Entities (NLP Engine)
