@@ -1,3 +1,6 @@
 Submit Natural Language Command
 Authenticate User
 Parse Intent & Entities (NLP Engine)
+Provide Fallback Response
+Consult Contextual Memory (Last 3 messages)
+Execute Task
