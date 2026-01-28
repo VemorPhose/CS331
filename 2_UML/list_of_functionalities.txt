@@ -1,3 +1,6 @@
 Administrator
     -Register External Script
     -Execute Write-Action (e.g., Restart Service)
+    -Query System Metrics (Read-Only)
+    -Manage Schedule/Reminders
+    -Submit Natural Language Command
