@@ -61,3 +61,62 @@ def gettime() -> str:
         "timezone": "Local"
     }
     return json.dumps(result)
+
+
+def get_system_metrics() -> str:
+    """
+    Returns current system metrics in a structured JSON format.
+    Use this tool when the user asks about system performance, resource usage, or system status.
+    
+    Returns:
+        str: JSON string containing system metrics
+    """
+    try:
+        # Quick CPU check (no interval for speed)
+        cpu_percent = psutil.cpu_percent(interval=0.1)
+        cpu_count_logical = psutil.cpu_count(logical=True)
+        cpu_count_physical = psutil.cpu_count(logical=False)
+        
+        # Memory Information
+        memory = psutil.virtual_memory()
+        
+        # Disk Information
+        disk = psutil.disk_usage('/')
+        
+        # System Information
+        boot_time = datetime.datetime.fromtimestamp(psutil.boot_time())
+        uptime_seconds = (datetime.datetime.now() - boot_time).total_seconds()
+        
+        metrics = {
+            "status": "success",
+            "system": {
+                "platform": platform.system(),
+                "hostname": platform.node(),
+                "uptime_hours": round(uptime_seconds / 3600, 2)
+            },
+            "cpu": {
+                "usage_percent": round(cpu_percent, 1),
+                "cores": cpu_count_logical,
+                "physical_cores": cpu_count_physical
+            },
+            "memory": {
+                "total_gb": round(memory.total / (1024**3), 2),
+                "available_gb": round(memory.available / (1024**3), 2),
+                "used_gb": round(memory.used / (1024**3), 2),
+                "usage_percent": round(memory.percent, 1)
+            },
+            "disk": {
+                "total_gb": round(disk.total / (1024**3), 2),
+                "used_gb": round(disk.used / (1024**3), 2),
+                "free_gb": round(disk.free / (1024**3), 2),
+                "usage_percent": round(disk.percent, 1)
+            }
+        }
+        
+        return json.dumps(metrics)
+        
+    except Exception as e:
+        return json.dumps({
+            "status": "error",
+            "error": str(e)
+        })
