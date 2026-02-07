@@ -268,3 +268,33 @@ async def run_single_query(user_input: str) -> str:
     write_log(tool_name, user_input, response_text)
     
     return response_text
+
+async def interactive_mode():
+    """Run the agent in interactive mode."""
+    print(f"Agent '{root_agent.name}' initialized")
+    print(f"Model: {llm_model.model}")
+    print(f"Tools: {[tool.__name__ for tool in root_agent.tools]}")
+    print(f"Logs: {LOG_FILE.absolute()}")
+    print("\nType 'exit' or 'quit' to end the session.\n")
+    print("="*60)
+    
+    app_name = "parsing_engine_app"
+    session_id = "interactive_session"
+    user_id = "user_01"
+    
+    session_service = InMemorySessionService()
+    
+    try:
+        await session_service.create_session(
+            app_name=app_name,
+            session_id=session_id,
+            user_id=user_id
+        )
+    except Exception:
+        pass
+    
+    runner = Runner(
+        app_name=app_name,
+        agent=root_agent,
+        session_service=session_service
+    )
