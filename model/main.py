@@ -393,4 +393,9 @@ async def main():
             print("  python main.py 'Show me system metrics'")
             print(f"\nLogs are stored in: {LOG_FILE.absolute()}")
             return
-        
+        user_prompt = " ".join(sys.argv[1:])
+        response = await run_single_query(user_prompt)
+        print(response)
+    else:
+        # Interactive mode
+        await interactive_mode()
