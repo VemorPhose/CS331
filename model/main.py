@@ -268,3 +268,141 @@ async def run_single_query(user_input: str) -> str:
     write_log(tool_name, user_input, response_text)
     
     return response_text
+
+async def interactive_mode():
+    """Run the agent in interactive mode."""
+    print(f"Agent '{root_agent.name}' initialized")
+    print(f"Model: {llm_model.model}")
+    print(f"Tools: {[tool.__name__ for tool in root_agent.tools]}")
+    print(f"Logs: {LOG_FILE.absolute()}")
+    print("\nType 'exit' or 'quit' to end the session.\n")
+    print("="*60)
+    
+    app_name = "parsing_engine_app"
+    session_id = "interactive_session"
+    user_id = "user_01"
+    
+    session_service = InMemorySessionService()
+    
+    try:
+        await session_service.create_session(
+            app_name=app_name,
+            session_id=session_id,
+            user_id=user_id
+        )
+    except Exception:
+        pass
+    
+    runner = Runner(
+        app_name=app_name,
+        agent=root_agent,
+        session_service=session_service
+    )
+    
+    while True:
+        try:
+            user_input = input("\nUser: ").strip()
+            
+            if not user_input:
+                continue
+                
+            if user_input.lower() in ["exit", "quit", "bye"]:
+                print("\nGoodbye!")
+                break
+            
+            user_msg = types.Content(
+                role="user",
+                parts=[types.Part(text=user_input)]
+            )
+            
+            print("Processing...\n")
+            # Track tools used
+            tools_used = []
+            final_response = None
+            
+            async for event in runner.run_async(
+                session_id=session_id,
+                user_id=user_id,
+                new_message=user_msg
+            ):
+                # Track tool usage
+                if hasattr(event, 'tool_call') and event.tool_call:
+                    tools_used.append(event.tool_call.name if hasattr(event.tool_call, 'name') else 'unknown')
+                
+                if hasattr(event, 'content') and event.content:
+                    final_response = event.content
+                elif hasattr(event, 'text') and event.text:
+                    final_response = event.text
+            
+            response_text = "No response received from agent."
+            
+            try:
+                session = await session_service.get_session(
+                    app_name=app_name,
+                    session_id=session_id,
+                    user_id=user_id
+                )
+                
+                if session and session.messages and len(session.messages) > 0:
+                    last_message = session.messages[-1]
+                    if last_message.role == "model" and last_message.parts and len(last_message.parts) > 0:
+                        part = last_message.parts[0]
+                        if hasattr(part, 'text'):
+                            response_text = part.text.strip()
+            except Exception:
+                pass
+            
+            if response_text == "No response received from agent." and final_response:
+                if isinstance(final_response, str):
+                    response_text = final_response.strip()
+                elif hasattr(final_response, 'parts') and len(final_response.parts) > 0:
+                    if hasattr(final_response.parts[0], 'text'):
+                        response_text = final_response.parts[0].text.strip()
+                elif hasattr(final_response, 'text'):
+                    response_text = final_response.text.strip()
+            
+            # Display response
+            if response_text != "No response received from agent.":
+                print(f" Agent: {response_text}")
+                print("-"*60)
+            else:
+                print("No response received from agent.")
+            
+            # Log the interaction
+            tool_name = tools_used[0] if tools_used else "conversation"
+            write_log(tool_name, user_input, response_text)
+                
+        except KeyboardInterrupt:
+            print("\n Session interrupted. Goodbye!")
+            break
+        except Exception as e:
+            print(f"\n Error: {str(e)}")
+            print("\nContinuing...\n")
+            
+async def main():
+    """Main entry point - handles CLI arguments or interactive mode."""
+    if len(sys.argv) > 1:
+        # CLI mode - single query
+        if sys.argv[1] in ["-h", "--help"]:
+            print("Usage:")
+            print("  python main.py <prompt>           # Single query mode")
+            print("  python main.py                    # Interactive mode")
+            print("  python main.py --help             # Show this help")
+            print("\nExamples:")
+            print("  python main.py 'What time is it?'")
+            print("  python main.py 'Show me system metrics'")
+            print(f"\nLogs are stored in: {LOG_FILE.absolute()}")
+            return
+        user_prompt = " ".join(sys.argv[1:])
+        response = await run_single_query(user_prompt)
+        print(response)
+    else:
+        # Interactive mode
+        await interactive_mode()
+        
+
+if __name__ == "__main__":
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("\nProgram terminated.")
