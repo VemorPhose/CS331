@@ -64,6 +64,7 @@ def gettime() -> str:
 
 def get_system_metrics() -> str:
     """
+    Use this tool to answer any and all questions related to system performance, server stats or performance of CPU/memory, etc.
     Returns current system metrics in a structured JSON format.
     Use this tool when the user asks about system performance, CPU, memory, disk usage, or system status.
     
