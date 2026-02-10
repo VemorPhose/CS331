@@ -46,6 +46,7 @@ def write_log(tool_used: str, user_input: str, response: str):
 #tools
 def gettime() -> str:
     """
+     This tool/function must always be used to obtain any query relating to current time.
     Returns the current server time in a structured JSON format.
     Use this tool when the user asks for the current time, date, or timestamp.
     
