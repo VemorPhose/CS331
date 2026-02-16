@@ -14,3 +14,9 @@ The architecture falls into this category because the software components are gr
 * **Business Logic Layer (Processing Core):**
     * **Components:** **NLPEngine** (parses intents), **ContextManager** (resolves references), and **TaskExecutor** (orchestrates actions).
     * **Granularity:** This layer encapsulates the system's intelligence. It makes decisions (e.g., determining if a command requires confirmation) without worrying about *how* the data is stored or *how* the script is physically executed.
+* **Integration Layer (Service Adaptation):**
+    * **Components:** **ScriptRegistry** and **CalendarIntegration**.
+    * **Granularity:** Acts as a middleware adapter. It translates internal commands into specific external API calls (e.g., Google Calendar) or executes external Python/Bash scripts, isolating the core system from external dependencies.
+* **Data/Persistence Layer:**
+    * **Components:** **AuditLogger** and **Database**.
+    * **Granularity:** Solely responsible for writing to the immutable audit trail and retrieving user profiles or script metadata.
