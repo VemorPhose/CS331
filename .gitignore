@@ -1,0 +1,48 @@
+# Python virtual environments
+.venv/
+venv/
+env/
+
+# Python bytecode / cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+.eggs/
+.mypy_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# FastAPI / logs
+*.log
+model/agent_logs.json
+
+# Environment / secrets
+.env
+.env.*
+*.key
+*.pem
+
+# Node / frontend (Vite + React)
+client/node_modules/
+client/dist/
+npm-debug.log*
+yarn-error.log*
+pnpm-lock.yaml
+*.tsbuildinfo
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# LibreOffice / Office temporary/lock files
+.~lock.*
+~$*.docx
+~$*.xlsx
+~$*.pptx
