@@ -25,7 +25,11 @@ async def register(user: UserCreate):
     
     try:
         created_user = create_user(user.email, user.password)
-        return User(email=created_user["email"], is_active=created_user["is_active"])
+        return User(
+            email=created_user["email"], 
+            is_active=created_user["is_active"],
+            role=created_user.get("role", "GENERAL")
+        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -83,7 +87,11 @@ async def get_me(current_user: TokenData = Depends(get_current_user)):
             detail="User not found"
         )
     
-    return User(email=db_user["email"], is_active=db_user["is_active"])
+    return User(
+        email=db_user["email"], 
+        is_active=db_user["is_active"],
+        role=db_user.get("role", "GENERAL")
+    )
 
 @app.get("/")
 async def root():
