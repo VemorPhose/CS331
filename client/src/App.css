@@ -219,8 +219,7 @@
 }
 
 .primary-btn,
-.secondary-btn,
-.google-fallback-btn {
+.secondary-btn {
   border-radius: 11px;
   padding: 10px 14px;
   cursor: pointer;
@@ -248,53 +247,9 @@
 }
 
 .primary-btn:disabled,
-.secondary-btn:disabled,
-.google-fallback-btn:disabled {
+.secondary-btn:disabled {
   opacity: 0.58;
   cursor: not-allowed;
-}
-
-.divider {
-  margin: 12px 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #8ea4c6;
-  font-size: 0.82rem;
-}
-
-.divider::before,
-.divider::after {
-  content: "";
-  flex: 1;
-  height: 1px;
-  background: rgba(148, 163, 184, 0.28);
-}
-
-.google-auth-block {
-  display: grid;
-  gap: 8px;
-}
-
-.google-button-slot {
-  min-height: 44px;
-}
-
-.google-fallback-btn {
-  border: 1px solid rgba(148, 163, 184, 0.38);
-  color: #e2e8f0;
-  background: rgba(15, 23, 42, 0.84);
-}
-
-.google-fallback-btn:hover {
-  border-color: rgba(250, 204, 21, 0.65);
-}
-
-.hint-text {
-  margin: 0;
-  color: #fcd34d;
-  font-size: 0.78rem;
-  line-height: 1.4;
 }
 
 .error-text {

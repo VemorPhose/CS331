@@ -1,13 +1,9 @@
 from datetime import timedelta
-import secrets
 from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
-from google.auth.transport import requests as google_requests
-from google.oauth2 import id_token as google_id_token
-from models import UserCreate, UserLogin, User, Token, TokenData, GoogleLoginRequest
+from models import UserCreate, UserLogin, User, Token, TokenData
 from auth import (
-    hash_password, 
     verify_password, 
     create_access_token, 
     get_current_user
@@ -93,48 +89,6 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     
     return {"access_token": access_token, "token_type": "bearer"}
 
-
-@app.post("/google-login", response_model=Token)
-async def google_login(payload: GoogleLoginRequest):
-    """Login using a Google Identity credential (ID token)"""
-    if not settings.GOOGLE_CLIENT_ID:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="GOOGLE_CLIENT_ID is not configured on the auth server"
-        )
-
-    try:
-        token_info = google_id_token.verify_oauth2_token(
-            payload.credential,
-            google_requests.Request(),
-            settings.GOOGLE_CLIENT_ID,
-        )
-    except ValueError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid Google credential",
-        ) from exc
-
-    email = token_info.get("email")
-    email_verified = token_info.get("email_verified", False)
-
-    if not email or not email_verified:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Google account email is missing or unverified",
-        )
-
-    if not user_exists(email):
-        create_user(email=email, password=secrets.token_urlsafe(32))
-
-    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": email},
-        expires_delta=access_token_expires,
-    )
-
-    return {"access_token": access_token, "token_type": "bearer"}
-
 @app.get("/me", response_model=User)
 async def get_me(current_user: TokenData = Depends(get_current_user)):
     """Get current user info"""
@@ -161,7 +115,6 @@ async def root():
             "register": "POST /register",
             "login": "POST /login",
             "token": "POST /token",
-            "google_login": "POST /google-login",
             "me": "GET /me (requires auth)"
         }
     }

@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 
-load_dotenv(Path(__file__).with_name(".env"))
+load_dotenv(Path(__file__).with_name(".env"), override=True)
 
 app = FastAPI(title="Chatbot API")
 

@@ -5,7 +5,6 @@ const AUTH_API_BASE =
   import.meta.env.VITE_AUTH_API_BASE || "http://127.0.0.1:8000";
 const CHAT_API_BASE =
   import.meta.env.VITE_CHAT_API_BASE || "http://127.0.0.1:8001";
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
 
 const QUICK_INTENTS = [
   "Show current system metrics",
@@ -39,7 +38,7 @@ const maskSensitiveOutput = (text) => {
   if (!text) return "";
 
   return text
-    .replace(/AIza[0-9A-Za-z_-]{20,}/g, "[masked-google-key]")
+    .replace(/AIza[0-9A-Za-z_-]{20,}/g, "[masked-api-key]")
     .replace(/sk-[A-Za-z0-9]{20,}/g, "[masked-secret]")
     .replace(/(api[_-]?key\s*[:=]\s*)([^\s]+)/gi, "$1[masked]");
 };
@@ -130,8 +129,6 @@ function App() {
 
   const messagesRef = useRef(null);
   const inputRef = useRef(null);
-  const googleButtonRef = useRef(null);
-  const googleInitializedRef = useRef(false);
   const isAtBottomRef = useRef(true);
 
   const contextWindow = useMemo(() => {
@@ -215,23 +212,6 @@ function App() {
     await loginWithPassword(nextEmail, nextPassword);
   };
 
-  const loginWithGoogleCredential = async (credential) => {
-    const tokenData = await requestJson(
-      `${AUTH_API_BASE}/google-login`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ credential }),
-      },
-      15000
-    );
-
-    const profile = await fetchCurrentUser(tokenData.access_token);
-    setSession(tokenData.access_token, profile);
-  };
-
   const refreshServiceHealth = async () => {
     const nextState = {
       auth: "down",
@@ -272,60 +252,6 @@ function App() {
       setAuthError("Session expired. Please sign in again.");
     });
   }, [authToken, userEmail]);
-
-  useEffect(() => {
-    if (!GOOGLE_CLIENT_ID || authToken) return;
-
-    const tryRenderButton = () => {
-      if (!window.google?.accounts?.id || !googleButtonRef.current) return false;
-
-      if (!googleInitializedRef.current) {
-        window.google.accounts.id.initialize({
-          client_id: GOOGLE_CLIENT_ID,
-          callback: async (response) => {
-            if (!response?.credential) {
-              setAuthError("Google did not return a valid credential.");
-              return;
-            }
-
-            setAuthLoading(true);
-            setAuthError("");
-            try {
-              await loginWithGoogleCredential(response.credential);
-            } catch (error) {
-              clearSession();
-              setAuthError(normalizeError(error));
-            } finally {
-              setAuthLoading(false);
-            }
-          },
-        });
-        googleInitializedRef.current = true;
-      }
-
-      googleButtonRef.current.innerHTML = "";
-      window.google.accounts.id.renderButton(googleButtonRef.current, {
-        type: "standard",
-        theme: "filled_black",
-        size: "large",
-        text: "signin_with",
-        shape: "pill",
-        width: 250,
-      });
-
-      return true;
-    };
-
-    if (tryRenderButton()) return undefined;
-
-    const timer = setInterval(() => {
-      if (tryRenderButton()) {
-        clearInterval(timer);
-      }
-    }, 200);
-
-    return () => clearInterval(timer);
-  }, [authToken]);
 
   useEffect(() => {
     const el = messagesRef.current;
@@ -378,19 +304,6 @@ function App() {
     } finally {
       setAuthLoading(false);
     }
-  };
-
-  const handleGoogleFallbackClick = () => {
-    setAuthError("");
-    if (!GOOGLE_CLIENT_ID) {
-      setAuthError("Set VITE_GOOGLE_CLIENT_ID in client/.env.local to enable Google sign-in.");
-      return;
-    }
-    if (!window.google?.accounts?.id) {
-      setAuthError("Google Sign-In is still loading. Try again in a moment.");
-      return;
-    }
-    window.google.accounts.id.prompt();
   };
 
   const handleLogout = () => {
@@ -524,7 +437,7 @@ function App() {
             <section className="card panel">
               <h2>Authentication</h2>
               <p className="panel-note">
-                Required before task execution features become available.
+                Email/password authentication is required before task execution.
               </p>
 
               {authToken ? (
@@ -595,25 +508,6 @@ function App() {
                           : "Sign in"}
                     </button>
                   </form>
-
-                  <div className="divider">or</div>
-
-                  <div className="google-auth-block">
-                    <div ref={googleButtonRef} className="google-button-slot" />
-                    <button
-                      type="button"
-                      className="google-fallback-btn"
-                      onClick={handleGoogleFallbackClick}
-                    >
-                      Continue with Google
-                    </button>
-                    {!GOOGLE_CLIENT_ID && (
-                      <p className="hint-text">
-                        Add VITE_GOOGLE_CLIENT_ID in client/.env.local to enable Google
-                        Identity sign-in.
-                      </p>
-                    )}
-                  </div>
 
                   {authError && <p className="error-text">{authError}</p>}
                 </>
