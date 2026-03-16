@@ -64,3 +64,8 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     """Token data model (decoded token payload)"""
     email: Optional[str] = None
+
+
+class GoogleLoginRequest(BaseModel):
+    """Google Identity token login payload"""
+    credential: str
